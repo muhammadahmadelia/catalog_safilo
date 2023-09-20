@@ -1,0 +1,9 @@
+{
+    "brands": [
+        {
+            "brand": "Carrera",
+            "code": "CA",
+            "glasses_type": ["Sunglasses"]
+        }
+    ]
+}
