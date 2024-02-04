@@ -12,6 +12,7 @@ class Product:
         self.__type: str = ''
         self.__bridge: str = ''
         self.__template: str = ''
+        self.__url: str = ''
         self.__shopify_id: str = ''
         self.__metafields: Metafields = Metafields()
         self.__image: str = ''
@@ -90,6 +91,14 @@ class Product:
     @template.setter
     def template(self, template: str):
         self.__template = template
+
+    @property
+    def url(self) -> str:
+        return self.__url
+
+    @url.setter
+    def url(self, url: str):
+        self.__url = url
 
     @property
     def shopify_id(self) -> str:

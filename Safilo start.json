@@ -3,7 +3,12 @@
         {
             "brand": "Carrera",
             "code": "CA",
-            "glasses_type": ["Sunglasses"]
+            "glasses_type": ["Sunglasses", "Eyeglasses"]
+        },
+        {
+            "brand": "Carrera Ducati",
+            "code": "CARDUC",
+            "glasses_type": ["Sunglasses","Eyeglasses"]
         }
     ]
 }

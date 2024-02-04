@@ -164,3 +164,6 @@ requirements/*.json
 *.png
 *.ico
 *.bat
+*.txt
+*.exe
+*.json
