@@ -188,10 +188,10 @@ class Safilo_Scraper:
     def accept_cookies(self) -> None:
         try:
             # accept cookies if found
-            if self.wait_until_element_found(30, 'xpath', '//button[@id="acceptCookiesPolicy"]'):
+            if self.wait_until_element_found(30, 'xpath', '//button[contains(@id, "acceptCookiesPolicy")]'):
                 for _ in range(0, 20):
                     try:
-                        self.browser.find_element(By.XPATH,'//button[@id="acceptCookiesPolicy"]').click()
+                        self.browser.find_element(By.XPATH,'//button[contains(@id, "acceptCookiesPolicy")]').click()
                         sleep(0.2)
                         break
                     except: sleep(0.5)
@@ -203,15 +203,15 @@ class Safilo_Scraper:
     def login(self, email: str, password: str) -> bool:
         login_flag = False
         try:
-            if self.wait_until_element_found(20, 'xpath', '//input[@id="emailField"]'):
-                self.browser.find_element(By.XPATH, '//input[@id="emailField"]').send_keys(email)
+            if self.wait_until_element_found(20, 'xpath', '//input[@class="username"]'):
+                self.browser.find_element(By.XPATH, '//input[@class="username"]').send_keys(email)
                 sleep(0.2)
-                if self.wait_until_element_found(20, 'xpath', '//input[@id="passwordField"]'):
-                    self.browser.find_element(By.XPATH, '//input[@id="passwordField"]').send_keys(password)
+                if self.wait_until_element_found(20, 'xpath', '//input[@class="password"]'):
+                    self.browser.find_element(By.XPATH, '//input[@class="password"]').send_keys(password)
                     sleep(0.2)
-                    self.browser.find_element(By.XPATH, '//input[@id="send2Dsk"]').click()
+                    self.browser.find_element(By.XPATH, '//button[@class="login-btn"]').click()
 
-                    if self.wait_until_element_found(20, 'xpath', '//button/span[contains(text(), "Brands")]'): login_flag = True
+                    if self.wait_until_element_found(100, 'xpath', '//button/span[contains(text(), "Brands")]'): login_flag = True
                 else: print('Password input not found')
             else: print('Email input not found')
         except Exception as e:
@@ -264,6 +264,7 @@ class Safilo_Scraper:
                 params=params,
                 cookies=cookies,
                 headers=headers,
+                verify=False
             )
             if response.status_code == 200:
                 for returnValue in response.json()['returnValue']:
@@ -298,6 +299,7 @@ class Safilo_Scraper:
                         url=API,
                         cookies=cookies,
                         headers=headers,
+                        verify=False
                     )
                     if response.status_code == 200:
                         brand_url = response.json()['canonicalUrl']
@@ -371,7 +373,7 @@ class Safilo_Scraper:
                 },
                 'cacheable': False,
             }
-            API = 'https://safilo.my.site.com/safilob2b/webruntime/api/apex/execute?language=en-US&asGuest=false&htmlEncode=false'
+            API = 'https://www.youandsafilo.com/webruntime/api/apex/execute?language=en-US&asGuest=false&htmlEncode=false'
             headers = self.get_headers(brand_url)
 
             headers['csrf-token'] = csrf_token
@@ -382,6 +384,7 @@ class Safilo_Scraper:
                 cookies=cookies,
                 headers=headers,
                 json=json_data,
+                verify=False
             )
             
             if response.status_code == 200:
@@ -426,13 +429,14 @@ class Safilo_Scraper:
                 'cacheable': False,
             }
 
-            API = 'https://safilo.my.site.com/safilob2b/webruntime/api/apex/execute?language=en-US&asGuest=false&htmlEncode=false'
+            API = 'https://www.youandsafilo.com/webruntime/api/apex/execute?language=en-US&asGuest=false&htmlEncode=false'
 
             response = requests.post(
                 url=API,
                 cookies=cookies,
                 headers=headers,
                 json=json_data,
+                verify=False
             )
             if response.status_code == 200:
                 json_data = response.json()['returnValue']
@@ -445,57 +449,81 @@ class Safilo_Scraper:
                     product_name = self.clean_product_name(product_name)
                 except: pass
                 
+                frame_codes = []
 
                 for key, value in json_data['variationIdToVariations'].items():
-                    product = Product()
-                    product.number = product_number
-                    product.name = product_name
-                    product.brand = brand_name
-                    product.type = glasses_type
-                    product.url = product_url
-
-                    try: product.frame_code = value['B2B_ColorCode__c']
-                    except: pass
-                    try: product.lens_code = value['B2B_LensCode__c']
-                    except: pass
-                    try: product.bridge = value['B2B_BridgeLengthSize__c']
-                    except: pass
-                    try: product.template = str(int(value['B2B_TempleLengthSize__c']))
-                    except: pass
-                    try: product.image = str(value['DisplayUrl']).strip().replace('{0}', '00').replace('{1}', 'medium')
+                    frame_code = ''
+                    try: frame_code = value['B2B_ColorCode__c']
                     except: pass
 
-                    # print(frame_code, lens_code, bridge, template, image_url)
-                    metafields = Metafields()
-                    try: metafields.for_who = value['segmentspec']
-                    except: pass
-                    try: metafields.lens_material = value['B2B_LensesMaterial__c']
-                    except: pass
-                    try: metafields.frame_shape = value['frameshape']
-                    except: pass
-                    try: metafields.frame_material = value['framematerial']
-                    except: pass
-                    try: metafields.frame_color = value['colorfamily'] if value['colorfamily'] else value['LEX_DescriptionRT__c']
-                    except: pass
-                    # print(gender, lens_material, frame_shape, frame_material, frame_color)
+                    if frame_code not in frame_codes:
+                        frame_codes.append(frame_code)
 
-                    product.metafields = metafields
+                        product = Product()
+                        product.number = product_number
+                        product.name = product_name
+                        product.brand = brand_name
+                        product.type = glasses_type
+                        product.url = product_url
 
-                    variant = Variant()
-                    try: variant.title = value['B2B_LensWidthSize__c']
-                    except: pass
-                    try: variant.sku = value['Name'] if value['Name'] else value['StockKeepingUnit']
-                    except: pass
-                    try: variant.inventory_quantity = 5 if value['B2B_StockValue__c'] > 0 else 0
-                    except: pass
-                    try: variant.listing_price = self.get_price(json_data['pricebookEntriesByIds'], key)
-                    except: pass
-                    try: variant.barcode_or_gtin = value['B2B_EANCode__c']
-                    except: pass
-                    product.add_single_variant(variant)
+                        try: product.frame_code = value['B2B_ColorCode__c']
+                        except: pass
+                        try: product.lens_code = value['B2B_LensCode__c']
+                        except: pass
+                        try: product.bridge = value['B2B_BridgeLengthSize__c']
+                        except: pass
+                        try: product.template = str(int(value['B2B_TempleLengthSize__c']))
+                        except: pass
+                        try: product.image = str(value['DisplayUrl']).strip().replace('{0}', '00').replace('{1}', 'medium')
+                        except: pass
 
-                    self.data.append(product)
-                    # print(title, sku, listing_price, barcode, '\n')
+                        # print(frame_code, lens_code, bridge, template, image_url)
+                        metafields = Metafields()
+                        try: metafields.for_who = value['segmentspec']
+                        except: pass
+                        try: metafields.lens_material = value['B2B_LensesMaterial__c']
+                        except: pass
+                        try: metafields.frame_shape = value['frameshape']
+                        except: pass
+                        try: metafields.frame_material = value['framematerial']
+                        except: pass
+                        try: metafields.frame_color = value['colorfamily'] if value['colorfamily'] else value['LEX_DescriptionRT__c']
+                        except: pass
+                        # print(gender, lens_material, frame_shape, frame_material, frame_color)
+
+                        product.metafields = metafields
+
+                        variant = Variant()
+                        try: variant.title = value['B2B_LensWidthSize__c']
+                        except: pass
+                        try: variant.sku = value['Name'] if value['Name'] else value['StockKeepingUnit']
+                        except: pass
+                        try: variant.inventory_quantity = 5 if value['B2B_StockValue__c'] > 0 else 0
+                        except: pass
+                        try: variant.listing_price = self.get_price(json_data['pricebookEntriesByIds'], key)
+                        except: pass
+                        try: variant.barcode_or_gtin = value['B2B_EANCode__c']
+                        except: pass
+                        product.add_single_variant(variant)
+
+                        self.data.append(product)
+                    else:
+                        for product in self.data:
+                            if product.number == product_number and product.frame_code == frame_code:
+                                variant = Variant()
+                                try: variant.title = value['B2B_LensWidthSize__c']
+                                except: pass
+                                try: variant.sku = value['Name'] if value['Name'] else value['StockKeepingUnit']
+                                except: pass
+                                try: variant.inventory_quantity = 5 if value['B2B_StockValue__c'] > 0 else 0
+                                except: pass
+                                try: variant.listing_price = self.get_price(json_data['pricebookEntriesByIds'], key)
+                                except: pass
+                                try: variant.barcode_or_gtin = value['B2B_EANCode__c']
+                                except: pass
+                                product.add_single_variant(variant)
+                                break
+
         except Exception as e:
             if self.DEBUG: print(f'Exception in get_product_details: {e}')
             else: pass
