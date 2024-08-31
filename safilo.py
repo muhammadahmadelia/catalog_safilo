@@ -52,7 +52,7 @@ class myScrapingThread(threading.Thread):
         return threading.activeCount()
 
 class Safilo_Scraper:
-    def __init__(self, DEBUG: bool, result_filename: str, logs_filename: str) -> None:
+    def __init__(self, DEBUG: bool, result_filename: str, logs_filename: str, chrome_path: str) -> None:
         self.DEBUG = DEBUG
         self.result_filename = result_filename
         self.logs_filename = logs_filename
@@ -64,13 +64,16 @@ class Safilo_Scraper:
         self.chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         self.args = ["hide_console", ]
         # self.browser = webdriver.Chrome(options=self.chrome_options, service_args=self.args)
-        self.browser = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=self.chrome_options)
+        # self.browser = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=self.chrome_options)
+        self.browser = webdriver.Chrome(service=ChromeService(chrome_path), options=self.chrome_options)
         self.data = []
         # self.ref_json_data = None
         pass
 
     def controller(self, store: Store, brands_with_types: list[dict]):
         try:
+
+            
             brands_data: list = []
             cookies: dict = dict()
 
@@ -89,6 +92,7 @@ class Safilo_Scraper:
                     for glasses_type in brand_with_type['glasses_type']:
                         
                         print(f'Brand: {brand_name}')
+                        self.print_logs(f'Brand: {brand_name}')
 
                         if not cookies: cookies = self.get_cookies()
                         if not brands_data: brands_data = self.get_brands_data(cookies)
@@ -100,7 +104,7 @@ class Safilo_Scraper:
                                 brand_category_id = brand_json['category_id']
 
                                 self.open_new_tab(brand_url)
-
+                                
                                 csrf_token = self.get_csrf_token()
                                 
                                 data = self.get_all_product(brand_url, brand_category_id, glasses_type, cookies, csrf_token)
@@ -111,6 +115,9 @@ class Safilo_Scraper:
 
                                 print(f'Type: {glasses_type} | Total products: {total_products}')
                                 print(f'Start Time: {start_time.strftime("%A, %d %b %Y %I:%M:%S %p")}')
+
+                                self.print_logs(f'Type: {glasses_type} | Total products: {total_products}')
+                                self.print_logs(f'Start Time: {start_time.strftime("%A, %d %b %Y %I:%M:%S %p")}')
 
                                 if total_products and int(total_products) > 0: 
                                     self.printProgressBar(scraped_products, total_products, prefix = 'Progress:', suffix = 'Complete', length = 50)
@@ -863,8 +870,15 @@ try:
 
     scrape_time = datetime.now().strftime('%d-%m-%Y %H-%M-%S')
     logs_filename = f'Logs/Logs {scrape_time}.txt'
+
+    chrome_path = ''
+    if not chrome_path:
+        chrome_path = ChromeDriverManager().install()
+        if 'chromedriver.exe' not in chrome_path:
+            chrome_path = str(chrome_path).split('/')[0].strip()
+            chrome_path = f'{chrome_path}\\chromedriver.exe'
     
-    Safilo_Scraper(DEBUG, result_filename, logs_filename).controller(store, brands)
+    Safilo_Scraper(DEBUG, result_filename, logs_filename, chrome_path).controller(store, brands)
     
     for filename in glob.glob('Images/*'): os.remove(filename)
     data = read_data_from_json_file(DEBUG, result_filename)
