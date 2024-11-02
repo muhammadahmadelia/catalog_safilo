@@ -507,7 +507,9 @@ class Safilo_Scraper:
                         except: pass
                         try: variant.inventory_quantity = 5 if value['B2B_StockValue__c'] > 0 else 0
                         except: pass
-                        try: variant.listing_price = self.get_price(json_data['pricebookEntriesByIds'], key)
+                        try: variant.wholesale_price = float(self.get_wholesale_price(json_data['pricebookEntriesByIds'], key))
+                        except: pass
+                        try: variant.listing_price = self.get_listing_price(json_data['pricebookEntriesByIds'], key)
                         except: pass
                         try: variant.barcode_or_gtin = value['B2B_EANCode__c']
                         except: pass
@@ -549,10 +551,15 @@ class Safilo_Scraper:
             self.print_logs(f'Exception in clean_product_name: {e}')
         finally: return product_name
 
-    def get_price(self, data, varation_key):
+    def get_listing_price(self, data, varation_key):
         for key, value in data.items():
             if value['productId'] == varation_key:
                 return value['retailPrice']
+    
+    def get_wholesale_price(self, data, varation_key):
+        for key, value in data.items():
+            if value['productId'] == varation_key:
+                return value['unitPrice']
 
     def open_new_tab(self, url: str) -> None:
         # open category in new tab
