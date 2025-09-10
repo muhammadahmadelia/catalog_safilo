@@ -195,10 +195,10 @@ class Safilo_Scraper:
     def accept_cookies(self) -> None:
         try:
             # accept cookies if found
-            if self.wait_until_element_found(30, 'xpath', '//button[contains(@id, "acceptCookiesPolicy")]'):
+            if self.wait_until_element_found(30, 'xpath', '//button[contains(@class, "iubenda-cs-accept-btn")]'):
                 for _ in range(0, 20):
                     try:
-                        self.browser.find_element(By.XPATH,'//button[contains(@id, "acceptCookiesPolicy")]').click()
+                        self.browser.find_element(By.XPATH,'//button[contains(@class, "iubenda-cs-accept-btn")]').click()
                         sleep(0.2)
                         break
                     except: sleep(0.5)
