@@ -195,10 +195,10 @@ class Safilo_Scraper:
     def accept_cookies(self) -> None:
         try:
             # accept cookies if found
-            if self.wait_until_element_found(30, 'xpath', '//button[contains(@id, "acceptCookiesPolicy")]'):
+            if self.wait_until_element_found(30, 'xpath', '//button[contains(@class, "iubenda-cs-accept-btn")]'):
                 for _ in range(0, 20):
                     try:
-                        self.browser.find_element(By.XPATH,'//button[contains(@id, "acceptCookiesPolicy")]').click()
+                        self.browser.find_element(By.XPATH,'//button[contains(@class, "iubenda-cs-accept-btn")]').click()
                         sleep(0.2)
                         break
                     except: sleep(0.5)
@@ -217,8 +217,10 @@ class Safilo_Scraper:
                     self.browser.find_element(By.XPATH, '//input[@class="password"]').send_keys(password)
                     sleep(0.2)
                     self.browser.find_element(By.XPATH, '//button[@class="login-btn"]').click()
-
-                    if self.wait_until_element_found(100, 'xpath', '//button/span[contains(text(), "Brands")]'): login_flag = True
+                    if self.wait_until_element_found(100, 'xpath', '//button/span[contains(text(), "Marchi")]'):
+                        login_flag = True
+                        self.changeLanguageToEnglish()
+                    elif self.wait_until_element_found(100, 'xpath', '//button/span[contains(text(), "Brands")]'):  login_flag = True
                 else: print('Password input not found')
             else: print('Email input not found')
         except Exception as e:
@@ -226,6 +228,15 @@ class Safilo_Scraper:
             if self.DEBUG: print(f'Exception in login: {str(e)}')
             else: pass
         finally: return login_flag
+
+    def changeLanguageToEnglish(self):
+        try:
+            self.browser.get('https://www.youandsafilo.com/?redirect=false')
+            self.wait_until_browsing()
+        except Exception as e:
+            self.print_logs(f'Exception in changeLanguageToEnglish: {e}')
+            if self.DEBUG: print(f'Exception in changeLanguageToEnglish: {e}')
+            else: pass
     
     def wait_for_page_loading(self):
         self.wait_until_browsing()
