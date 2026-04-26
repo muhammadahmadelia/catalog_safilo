@@ -630,7 +630,7 @@ class Safilo_Scraper:
                     'lens_color': product.metafields.lens_color,
                     'frame_color': product.metafields.frame_color,
                     # 'status': product.status, 
-                    # 'type': product.type, 
+                    'type': product.type, 
                     'url': product.url, 
                     'metafields': [
                         { 'key': 'for_who', 'value': product.metafields.for_who },
@@ -846,7 +846,7 @@ def saving_picture_in_excel(data: list):
             im = Image.open(image)
             width, height = im.size
             worksheet.row_dimensions[new_index].height = height
-            worksheet.add_image(Imag(image), anchor='H'+str(new_index))
+            worksheet.add_image(Imag(image), anchor='K'+str(new_index))
             # col_letter = get_column_letter(7)
             # worksheet.column_dimensions[col_letter].width = width
 
